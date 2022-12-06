@@ -1,0 +1,80 @@
+variables:
+  MAVEN_OPTS: "-Dhttps.protocols=TLSv1.2 -Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=INFO -Dorg.slf4j.simpleLogger.showDateTime=true -Djava.awt.headless=true"
+  MAVEN_CLI_OPTS: "-s .gitlab-ci-mvn-settings.xml --batch-mode --errors --fail-at-end --show-version -DinstallAtEnd=true -DdeployAtEnd=true"
+
+cache:
+  paths:
+    - .m2/repository
+    - target/
+
+stages:
+  - maven-build
+  - maven-test
+  - maven-deploy
+  - docker-deploy
+
+maven-build:
+  image: maven:3.8.6-openjdk-11-slim
+  stage: maven-build
+  script:
+    - mvn $MAVEN_CLI_OPTS clean package -DskipTests
+  artifacts:
+    paths:
+      - target/*.jar
+    expire_in: 10 min
+
+maven-test:
+  image: maven:3.8.6-openjdk-11-slim
+  stage: maven-test
+  script:
+    - mvn $MAVEN_CLI_OPTS test
+
+maven-deploy-private-gitlab-package-registry:
+  image: maven:3.8.6-openjdk-11-slim
+  stage: maven-deploy
+  script:
+    - mvn $MAVEN_CLI_OPTS clean deploy -P private-gitlab-package-registry-deploy
+
+maven-deploy-private-nexus-repository:
+  image: maven:3.8.6-openjdk-11-slim
+  stage: maven-deploy
+  script:
+    - mvn $MAVEN_CLI_OPTS clean deploy -P private-nexus-repository-deploy
+
+docker-deploy-private-gitlab-container-registry:
+  image: docker:20.10.18
+  variables:
+    DOCKER_HOST: tcp://docker:2375
+    DOCKER_DRIVER: overlay2
+    DOCKER_TLS_CERTDIR: ""
+  stage: docker-deploy
+  services:
+    - name: docker:20.10.18-dind
+      alias: docker
+      command: ["--tls=false", "--insecure-registry=registry.gitlab.domain.com"]
+  before_script:
+    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
+  script:
+    - docker pull $CI_REGISTRY_IMAGE:latest || true;
+    - docker build --tag $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA --tag $CI_REGISTRY_IMAGE:latest .;
+    - docker push $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA;
+    - docker push $CI_REGISTRY_IMAGE:latest;
+
+docker-deploy-private-nexus-container-registry:
+  image: docker:20.10.18
+  variables:
+    DOCKER_HOST: tcp://docker:2375
+    DOCKER_DRIVER: overlay2
+    DOCKER_TLS_CERTDIR: ""
+  stage: docker-deploy
+  services:
+    - name: docker:20.10.18-dind
+      alias: docker
+      command: ["--tls=false", "--insecure-registry=registry.nexus.domain.com"]
+  before_script:
+    - docker login -u "$CI_NEXUS_REGISTRY_USER" -p "$CI_NEXUS_REGISTRY_PASSWORD" $CI_NEXUS_REGISTRY
+  script:
+    - docker pull $CI_NEXUS_REGISTRY/$CI_PROJECT_NAME:latest || true;
+    - docker build --tag $CI_NEXUS_REGISTRY/$CI_PROJECT_NAME:$CI_COMMIT_SHA --tag $CI_NEXUS_REGISTRY/$CI_PROJECT_NAME:latest .;
+    - docker push $CI_NEXUS_REGISTRY/$CI_PROJECT_NAME:$CI_COMMIT_SHA;
+    - docker push $CI_NEXUS_REGISTRY/$CI_PROJECT_NAME:latest;

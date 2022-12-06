@@ -1,0 +1,56 @@
+<settings xmlns="http://maven.apache.org/SETTINGS/1.1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.1.0 http://maven.apache.org/xsd/settings-1.1.0.xsd">
+    <servers>
+        <!-- private nexus maven repository -->
+        <server>
+            <id>private-nexus3-maven</id>
+            <username>change_me</username>
+            <password>change_me</password>
+        </server>
+        <!-- private nexus maven releases repository -->
+        <server>
+            <id>private-nexus3-maven-releases</id>
+            <username>change_me</username>
+            <password>change_me</password>
+        </server>
+        <!-- private nexus maven snapshots repository -->
+        <server>
+            <id>private-nexus3-maven-snapshots</id>
+            <username>change_me</username>
+            <password>change_me</password>
+        </server>
+        <!-- private gitlab package registry -->
+        <server>
+            <id>private-gitlab-maven</id>
+            <configuration>
+                <httpHeaders>
+                    <property>
+                        <name>Job-Token</name>
+                        <value>${env.CI_JOB_TOKEN}</value>
+                    </property>
+                </httpHeaders>
+            </configuration>
+        </server>
+        <!-- gitlab package registry (CI) -->
+        <server>
+            <id>ci-gitlab-maven</id>
+            <configuration>
+                <httpHeaders>
+                    <property>
+                        <name>Job-Token</name>
+                        <value>${env.CI_JOB_TOKEN}</value>
+                    </property>
+                </httpHeaders>
+            </configuration>
+        </server>
+    </servers>
+    <mirrors>
+        <!-- private nexus repository -->
+        <mirror>
+            <id>private-nexus3-maven</id>
+            <mirrorOf>central</mirrorOf>
+            <name>private-nexus3-maven</name>
+            <url>http://nexus.domain.com/repository/maven-public/</url>
+        </mirror>
+    </mirrors>
+</settings>

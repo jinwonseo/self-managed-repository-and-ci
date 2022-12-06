@@ -1,0 +1,58 @@
+<settings>
+  <servers>
+  	  <!-- private nexus maven repository -->
+    <server>
+        <id>private-nexus3-maven</id>
+        <username>gitlab-ci</username>
+        <password>change_me</password>
+    </server>
+    <!-- private nexus maven releases repository -->
+    <server>
+        <id>private-nexus3-maven-releases</id>
+        <username>gitlab-ci</username>
+        <password>change_me</password>
+    </server>
+    <!-- private nexus maven snapshots repository -->
+    <server>
+        <id>private-nexus3-maven-snapshots</id>
+        <username>gitlab-ci</username>
+        <password>change_me</password>
+    </server>
+  </servers>
+  
+  <mirrors>
+    <!--
+    <mirror>
+      <id>maven-default-http-blocker</id>
+      <mirrorOf>external:http:*</mirrorOf>
+      <name>Pseudo repository to mirror external repositories initially using HTTP.</name>
+      <url>http://0.0.0.0/</url>
+      <blocked>true</blocked>
+    </mirror>
+	-->
+    <!-- private nexus repository -->
+    <mirror>
+      <id>private-nexus</id>
+      <mirrorOf>central</mirrorOf>
+      <name>private-nexus3-maven</name>
+      <url>http://nexus.domain.com/repository/maven-public/</url>
+      <blocked>false</blocked>
+    </mirror>
+    <!-- private nexus maven releases repository -->
+    <mirror>
+      <id>private-nexus3-maven-releases</id>
+      <mirrorOf>releases</mirrorOf>
+      <name>private-nexus</name>
+      <url>http://nexus.domain.com/repository/maven-releases/</url>
+      <blocked>false</blocked>
+    </mirror>
+    <!-- private nexus maven snapshots repository -->
+    <mirror>
+      <id>private-nexus3-maven-snapshots</id>
+      <mirrorOf>snapshots</mirrorOf>
+      <name>private-nexus</name>
+      <url>http://nexus.domain.com/repository/maven-snapshots/</url>
+      <blocked>false</blocked>
+    </mirror>
+  </mirrors>
+</settings>
